@@ -203,7 +203,6 @@ class LlamaModel_AlignedKV(LlamaModel):
 
 
 class LlamaForCausalLM_AlignedKV(LlamaForCausalLM):
-    _tied_weights_keys = ["lm_head.weight"]
 
     def __init__(self, config):
         super(LlamaForCausalLM, self).__init__(config)
