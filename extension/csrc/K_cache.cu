@@ -120,6 +120,9 @@ void k_cache_save(torch::Tensor &k_cache_first_8,
     if (start_pos == 0 || seqlen % d_block == 0){
         // prefill
         int use_block = n_blocks;
+        if(n_blocks == 0){
+            return;
+        }
         dim3 grid(bsz, n_kv_heads, use_block);
         dim3 block(d_head, 1, 1);
         k_cache_save_prefill_kernel<<<grid, block>>>(k_cache_first_8_data,
@@ -325,6 +328,9 @@ torch::Tensor k_cache_compute(torch::Tensor &k_cache_first_8,
                              const bool reference){
     auto options = torch::TensorOptions().dtype(torch::kByte).device(q.device());
     torch::Tensor s = torch::empty({bsz, n_kv_heads, 1, (n_blocks + 1) * d_block * 2}, options);
+    if(n_blocks == 0){
+        return s;
+    }
     unsigned char* k_cache_first_8_data = k_cache_first_8.data_ptr<unsigned char>();
     unsigned char* k_cache_mid_4_data = k_cache_mid_4.data_ptr<unsigned char>();
     unsigned char* k_cache_last_4_data = k_cache_last_4.data_ptr<unsigned char>();

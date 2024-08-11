@@ -2,7 +2,7 @@ import torch
 import math
 from torch.utils.cpp_extension import load
 import torch.nn.functional as F
-from .KV_cache_cpp_extention import cuda_module
+from extension.KV_cache_cpp_extention import cuda_module
 
 bits_in_a_channel = 256
 column_block = bits_in_a_channel // 4
@@ -181,7 +181,7 @@ class V_Cache_Class(torch.nn.Module):
                                                 self.n_local_kv_heads,
                                                 self.max_seq_len,
                                                 self.head_dim,
-                                                s_cut.shape[-1],
+                                                s_cut.stride()[-2], # 切片索引形状不是内存形状
                                                 self.reststartpos,
                                                 reference)
         o = o.view(torch.half)

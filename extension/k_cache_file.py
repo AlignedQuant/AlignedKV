@@ -1,6 +1,6 @@
 import torch
 import math
-from .KV_cache_cpp_extention import cuda_module
+from extension.KV_cache_cpp_extention import cuda_module
 
 bits_in_a_channel = 256
 column_block = bits_in_a_channel // 4
@@ -88,6 +88,7 @@ class K_Cache_Class(torch.nn.Module):
                                      column_block,
                                      start_pos,
                                      seqlen)
+            print(f"k_cache_save: {self.k_cache_first_8.shape}, {self.k_cache_mid_4.shape}, {self.k_cache_last_4.shape}, {new_k.view(torch.uint8).shape}, {self.bsz}, {self.n_local_kv_heads}, {seqlen // column_block}, {self.n_max_blocks}, {self.head_dim}, {column_block}, {start_pos}, {seqlen}")
             self.restk = torch.zeros((self.bsz, column_block, self.n_local_kv_heads, self.head_dim), dtype=torch.half,
                                      device=self.device)
             self.restk[:, :seqlen % column_block, :, :] = new_k[:, seqlen - (seqlen % column_block):, :]

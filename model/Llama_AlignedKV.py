@@ -11,7 +11,7 @@ from transformers.models.llama.modeling_llama import LlamaMLP, LlamaRMSNorm, rep
 from transformers.utils import logging
 from transformers.cache_utils import Cache, DynamicCache
 
-from .KVCache_AlignedKV import QuantizedCache_AlignedKV
+from model.KVCache_AlignedKV import QuantizedCache_AlignedKV
 
 logger = logging.get_logger(__name__)
 
@@ -108,36 +108,41 @@ class LlamaAttention_AlignedKV(nn.Module):
             cos, sin = position_embeddings
         query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin, unsqueeze_dim=2)
 
-        assert isinstance(past_key_value, QuantizedCache_AlignedKV)
-        attn_output = past_key_value.auto_compute(query_states, key_states, value_states, self.layer_idx,
-                                                  attention_mask)
+        if isinstance(past_key_value, QuantizedCache_AlignedKV):
+            attn_output = past_key_value.auto_compute(query_states, key_states, value_states, self.layer_idx,
+                                                    attention_mask)
+        else:
+            logger.warning_once(
+                "The `past_key_value` argument is not an instance of `QuantizedCache_AlignedKV`. "
+                "The model will use normal cache instead."
+            )
+            if past_key_value is not None:
+                # sin and cos are specific to RoPE models; cache_position needed for the static cache
+                cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
+                key_states, value_states = past_key_value.update(key_states, value_states, self.layer_idx, cache_kwargs)
 
-        # if past_key_value is not None:
-        #     # sin and cos are specific to RoPE models; cache_position needed for the static cache
-        #     cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}
-        #     key_states, value_states = past_key_value.update(key_states, value_states, self.layer_idx, cache_kwargs)
-        #
-        # key_states = repeat_kv(key_states, self.num_key_value_groups)
-        # value_states = repeat_kv(value_states, self.num_key_value_groups)
-        #
-        # attn_weights = torch.matmul(query_states, key_states.transpose(2, 3)) / math.sqrt(self.head_dim)
-        #
-        # if attention_mask is not None:  # no matter the length, we just slice it
-        #     causal_mask = attention_mask[:, :, :, : key_states.shape[-2]]
-        #     attn_weights = attn_weights + causal_mask
-        #
-        # # upcast attention to fp32
-        # attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(query_states.dtype)
-        # attn_weights = nn.functional.dropout(attn_weights, p=self.attention_dropout, training=self.training)
-        # attn_output = torch.matmul(attn_weights, value_states)
+            key_states = repeat_kv(key_states, self.num_key_value_groups)
+            value_states = repeat_kv(value_states, self.num_key_value_groups)
 
-        if attn_output.size() != (bsz, self.num_heads, q_len, self.head_dim):
+            attn_weights = torch.matmul(query_states, key_states.transpose(2, 3)) / math.sqrt(self.head_dim)
+
+            if attention_mask is not None:  # no matter the length, we just slice it
+                causal_mask = attention_mask[:, :, :, : key_states.shape[-2]]
+                attn_weights = attn_weights + causal_mask
+
+            # upcast attention to fp32
+            attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(query_states.dtype)
+            attn_weights = nn.functional.dropout(attn_weights, p=self.attention_dropout, training=self.training)
+            attn_output = torch.matmul(attn_weights, value_states)
+            attn_output = attn_output.transpose(1, 2).contiguous()
+
+
+        if attn_output.size() != (bsz, q_len, self.num_heads, self.head_dim):
             raise ValueError(
-                f"`attn_output` should be of size {(bsz, self.num_heads, q_len, self.head_dim)}, but is"
+                f"`attn_output` should be of size {(bsz, q_len, self.num_heads, self.head_dim)}, but is"
                 f" {attn_output.size()}"
             )
 
-        attn_output = attn_output.transpose(1, 2).contiguous()
 
         attn_output = attn_output.reshape(bsz, q_len, -1)
 

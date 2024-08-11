@@ -7,10 +7,11 @@ from transformers import PretrainedConfig
 from transformers.cache_utils import Cache
 from transformers.utils import is_torchdynamo_compiling, logging
 
-from ..AlignedKV.k_cache_file import K_Cache_Class
-from ..AlignedKV.v_cache_file import V_Cache_Class
+from extension.k_cache_file import K_Cache_Class
+from extension.v_cache_file import V_Cache_Class
 
 logger = logging.get_logger(__name__)
+
 
 # 注意是所有层共享一个cache
 # 在模型generate时直接传入就好
@@ -39,16 +40,17 @@ class QuantizedCache_AlignedKV(Cache):
             new_key_cache = K_Cache_Class(max_batch_size, self.max_cache_len, self.num_key_value_heads, self.head_dim,
                                           idx, device, if_register_buffer)
             new_value_cache = V_Cache_Class(max_batch_size, self.max_cache_len, self.num_key_value_heads, self.head_dim,
-                                          idx, device, if_register_buffer)
+                                            idx, device, if_register_buffer)
             self.key_cache.append(new_key_cache)
             self.value_cache.append(new_value_cache)
+        self.reference = False  # debug using
 
     def update(
-        self,
-        key_states: torch.Tensor,
-        value_states: torch.Tensor,
-        layer_idx: int,
-        cache_kwargs: Optional[Dict[str, Any]] = None,
+            self,
+            key_states: torch.Tensor,
+            value_states: torch.Tensor,
+            layer_idx: int,
+            cache_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         raise Exception("This function is not used in AlignedKV")
 
@@ -103,7 +105,8 @@ class QuantizedCache_AlignedKV(Cache):
         self.key_cache[layer_id].save(k, start_pos, seqlen)
         return self.key_cache[layer_id].decoding_compute(q, start_pos, seqlen, self.reference)
 
-    def decoding_v(self, scores: torch.Tensor, v: torch.Tensor, start_pos: int, seqlen: int, layer_id: int) -> torch.Tensor:
+    def decoding_v(self, scores: torch.Tensor, v: torch.Tensor, start_pos: int, seqlen: int,
+                   layer_id: int) -> torch.Tensor:
         # input: scores.shape = (bsz, n_local_kv_heads, seqlen, seqlen)
         # input: v.shape = (bsz, seqlen, n_local_kv_heads, head_dim)
         # output: output.shape = (bsz, seqlen, n_local_kv_heads, head_dim)
@@ -114,16 +117,18 @@ class QuantizedCache_AlignedKV(Cache):
                  mask: torch.tensor, layer_id: int) -> torch.Tensor:
         scores = self.decoding_k(q, k, start_pos, seqlen, layer_id)
         if mask is not None:
-            scores = scores + mask
+            scores[:, :, :, :start_pos+seqlen] += mask
         scores = F.softmax(scores.float(), dim=-1).type_as(q)
         output = self.decoding_v(scores, v, start_pos, seqlen, layer_id)
+        output = output.view(q.shape[0], q.shape[1], q.shape[2], q.shape[3])
         return output
 
-    def auto_compute(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, layer_id: int, mask: torch.Tensor = None) -> torch.Tensor:
+    def auto_compute(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, layer_id: int,
+                     mask: torch.Tensor = None) -> torch.Tensor:
         seqlen = q.shape[1]
         start_pos = self.get_seq_length(layer_id)
         if mask is not None:
-            mask = mask[:, :, start_pos:start_pos + seqlen, :start_pos + seqlen]
+            mask = mask[:, :, :, :start_pos + seqlen]
         if start_pos == 0:
             return self.prefill(q, k, v, seqlen, mask, layer_id)
         else:

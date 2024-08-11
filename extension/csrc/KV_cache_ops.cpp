@@ -66,25 +66,10 @@ torch::Tensor v_cache_compute(torch::Tensor &v_cache_first_8,
                               const int start_pos_add_seqlen,
                               bool reference);
 
-torch::Tensor gemm_cuda(torch::Tensor A,
-                        torch::Tensor B,
-                        const int stride_batch_A,
-                        const int stride_n_heads_A,
-                        const int stride_l_A,
-                        const int stride_m_A,
-                        const int stride_batch_B,
-                        const int stride_n_heads_B,
-                        const int stride_m_B,
-                        const int stride_n_B,
-                        const int l,
-                        const int m,
-                        const int n);
-
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     m.def("k_cache_save", &k_cache_save, "save new key to K_cache");
     m.def("k_cache_compute", &k_cache_compute, "load K_cache and calculate attention score");
     m.def("v_cache_save", &v_cache_save, "save new value to V_cache");
     m.def("v_cache_test_compute", &v_cache_test_compute, "load V_cache and calculate attention score for test");
     m.def("v_cache_compute", &v_cache_compute, "load V_cache and calculate attention score");
-    m.def("gemm_cuda", &gemm_cuda, "gemm_cuda");
 }

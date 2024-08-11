@@ -2,46 +2,11 @@ D:\work-tanyifan\cuda编程\AlignedKV\venv\Lib\site-packages\transformers\genera
 
 D:\work-tanyifan\cuda编程\AlignedKV\venv\Lib\site-packages\transformers\cache_utils.py
 
+apt show rocm-libs -a
+pip install transformers
+python -m pip install huggingface_hub
+export HF_ENDPOINT=https://hf-mirror.com
+huggingface-cli download --resume-download gpt2 --local-dir gpt2
+wget https://hf-mirror.com/hfd/hfd.sh
 
-https://huggingface.co/docs/transformers/v4.44.0/en/kv_cache#what-is-cache-and-why-we-should-care
-
-            elif generation_config.cache_implementation == "quantized":
-                if not self._supports_quantized_cache:
-                    raise ValueError(
-                        "This model does not support the quantized cache. If you want your model to support quantized "
-                        "cache, please open an issue."
-                    )
-
-                cache_config = (
-                    generation_config.cache_config
-                    if generation_config.cache_config is not None
-                    else QuantizedCacheConfig()
-                )
-                cache_class = QUANT_BACKEND_CLASSES_MAPPING[cache_config.backend]
-
-                if cache_config.backend == "quanto" and not is_quanto_available():
-                    raise ImportError(
-                        "You need to install `quanto` in order to use KV cache quantization with quanto backend. "
-                        "Please install it via  with `pip install quanto`"
-                    )
-                elif cache_config.backend == "HQQ" and not is_hqq_available():
-                    raise ImportError(
-                        "You need to install `HQQ` in order to use KV cache quantization with HQQ backend. "
-                        "Please install it via  with `pip install hqq`"
-                    )
-
-                model_kwargs[cache_name] = cache_class(cache_config)
-
-kvcache设计上是所有层共享一个
-
-    def _sample(
-
-                else:
-                return GenerateDecoderOnlyOutput(
-                    sequences=input_ids,
-                    scores=scores,
-                    logits=raw_logits,
-                    attentions=decoder_attentions,
-                    hidden_states=decoder_hidden_states,
-                    past_key_values=model_kwargs.get("past_key_values"),
-                )
+huggingface-cli download --resume-download meta-llama/Llama-2-7b-hf

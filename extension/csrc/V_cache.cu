@@ -28,15 +28,15 @@ __global__ void v_cache_save_kernel(unsigned char* v_cache_first_8_data,
                                     const int seqlen){
     for(int pos = start_pos; pos < start_pos + seqlen; ++pos){
         v_cache_first_8_data[(blockIdx.x * stride_batch_v_cache + blockIdx.y * stride_head_v_cache + pos * stride_seq_v_cache + threadIdx.x) * 2]
-                = v_new_data[(blockIdx.x * stride_batch_v_new + blockIdx.z * stride_seq_v_new + blockIdx.y * stride_head_v_new + threadIdx.x * 2) * 2 + 1];
+                = v_new_data[(blockIdx.x * stride_batch_v_new + pos * stride_seq_v_new + blockIdx.y * stride_head_v_new + threadIdx.x * 2) * 2 + 1];
         v_cache_first_8_data[(blockIdx.x * stride_batch_v_cache + blockIdx.y * stride_head_v_cache + pos * stride_seq_v_cache + threadIdx.x) * 2 + 1]
-                = v_new_data[(blockIdx.x * stride_batch_v_new + blockIdx.z * stride_seq_v_new + blockIdx.y * stride_head_v_new + threadIdx.x * 2 + 1) * 2 + 1];
+                = v_new_data[(blockIdx.x * stride_batch_v_new + pos * stride_seq_v_new + blockIdx.y * stride_head_v_new + threadIdx.x * 2 + 1) * 2 + 1];
         v_cache_mid_4_data[(blockIdx.x * stride_batch_v_cache + blockIdx.y * stride_head_v_cache + pos * stride_seq_v_cache + threadIdx.x)]
-                = (v_new_data[(blockIdx.x * stride_batch_v_new + blockIdx.z * stride_seq_v_new + blockIdx.y * stride_head_v_new + threadIdx.x * 2) * 2] & 0xf0)
-                  + ((v_new_data[(blockIdx.x * stride_batch_v_new + blockIdx.z * stride_seq_v_new + blockIdx.y * stride_head_v_new + threadIdx.x * 2 + 1) * 2] & 0xf0) >> 4);
+                = (v_new_data[(blockIdx.x * stride_batch_v_new + pos * stride_seq_v_new + blockIdx.y * stride_head_v_new + threadIdx.x * 2) * 2] & 0xf0)
+                  + ((v_new_data[(blockIdx.x * stride_batch_v_new + pos * stride_seq_v_new + blockIdx.y * stride_head_v_new + threadIdx.x * 2 + 1) * 2] & 0xf0) >> 4);
         v_cache_last_4_data[(blockIdx.x * stride_batch_v_cache + blockIdx.y * stride_head_v_cache + pos * stride_seq_v_cache + threadIdx.x)]
-                = ((v_new_data[(blockIdx.x * stride_batch_v_new + blockIdx.z * stride_seq_v_new + blockIdx.y * stride_head_v_new + threadIdx.x * 2) * 2] & 0x0f) << 4)
-                  + (v_new_data[(blockIdx.x * stride_batch_v_new + blockIdx.z * stride_seq_v_new + blockIdx.y * stride_head_v_new + threadIdx.x * 2 + 1) * 2] & 0x0f);
+                = ((v_new_data[(blockIdx.x * stride_batch_v_new + pos * stride_seq_v_new + blockIdx.y * stride_head_v_new + threadIdx.x * 2) * 2] & 0x0f) << 4)
+                  + (v_new_data[(blockIdx.x * stride_batch_v_new + pos * stride_seq_v_new + blockIdx.y * stride_head_v_new + threadIdx.x * 2 + 1) * 2] & 0x0f);
     }
 }
 
@@ -51,6 +51,8 @@ void v_cache_save(torch::Tensor &v_cache_first_8,
                   const int head_dim,
                   const int start_pos,
                   const int seq_len){
+    if(seq_len == 0)
+        return;
     unsigned char* v_cache_first_8_data = (unsigned char*)v_cache_first_8.data_ptr<unsigned char>();
     unsigned char* v_cache_mid_4_data = (unsigned char*)v_cache_mid_4.data_ptr<unsigned char>();
     unsigned char* v_cache_last_4_data = (unsigned char*)v_cache_last_4.data_ptr<unsigned char>();
