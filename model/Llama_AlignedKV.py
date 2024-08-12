@@ -116,6 +116,9 @@ class LlamaAttention_AlignedKV(nn.Module):
                 "The `past_key_value` argument is not an instance of `QuantizedCache_AlignedKV`. "
                 "The model will use normal cache instead."
             )
+            query_states = query_states.transpose(1, 2)
+            key_states = key_states.transpose(1, 2)
+            value_states = value_states.transpose(1, 2)
             if past_key_value is not None:
                 # sin and cos are specific to RoPE models; cache_position needed for the static cache
                 cache_kwargs = {"sin": sin, "cos": cos, "cache_position": cache_position}

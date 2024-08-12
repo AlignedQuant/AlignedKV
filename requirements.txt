@@ -1,3 +1,4 @@
 torch == 2.3.0
 transformers == 4.44.0
 ninja
+datasets

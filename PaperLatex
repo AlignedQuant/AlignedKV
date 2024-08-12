@@ -1,0 +1,472 @@
+%File: formatting-instructions-latex-2025.tex
+%release 2025.0
+\documentclass[letterpaper]{article} % DO NOT CHANGE THIS
+\usepackage{aaai25}  % DO NOT CHANGE THIS
+\usepackage{times}  % DO NOT CHANGE THIS
+\usepackage{helvet}  % DO NOT CHANGE THIS
+\usepackage{courier}  % DO NOT CHANGE THIS
+\usepackage[hyphens]{url}  % DO NOT CHANGE THIS
+\usepackage{graphicx} % DO NOT CHANGE THIS
+\urlstyle{rm} % DO NOT CHANGE THIS
+\def\UrlFont{\rm}  % DO NOT CHANGE THIS
+\usepackage{natbib}  % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+\usepackage{caption} % DO NOT CHANGE THIS AND DO NOT ADD ANY OPTIONS TO IT
+\frenchspacing  % DO NOT CHANGE THIS
+\setlength{\pdfpagewidth}{8.5in}  % DO NOT CHANGE THIS
+\setlength{\pdfpageheight}{11in}  % DO NOT CHANGE THIS
+%
+% These are recommended to typeset algorithms but not required. See the subsubsection on algorithms. Remove them if you don't have algorithms in your paper.
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{color}
+% self-define
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{url}
+
+%
+% These are are recommended to typeset listings but not required. See the subsubsection on listing. Remove this block if you don't have listings in your paper.
+\usepackage{newfloat}
+\usepackage{listings}
+\DeclareCaptionStyle{ruled}{labelfont=normalfont,labelsep=colon,strut=off} % DO NOT CHANGE THIS
+\lstset{%
+	basicstyle={\footnotesize\ttfamily},% footnotesize acceptable for monospace
+	numbers=left,numberstyle=\footnotesize,xleftmargin=2em,% show line numbers, remove this entire line if you don't want the numbers.
+	aboveskip=0pt,belowskip=0pt,%
+	showstringspaces=false,tabsize=2,breaklines=true}
+\floatstyle{ruled}
+\newfloat{listing}{tb}{lst}{}
+\floatname{listing}{Listing}
+%
+% Keep the \pdfinfo as shown here. There's no need
+% for you to add the /Title and /Author tags.
+\pdfinfo{
+/TemplateVersion (2025.1)
+}
+
+% DISALLOWED PACKAGES
+% \usepackage{authblk} -- This package is specifically forbidden
+% \usepackage{balance} -- This package is specifically forbidden
+% \usepackage{color (if used in text)
+% \usepackage{CJK} -- This package is specifically forbidden
+% \usepackage{float} -- This package is specifically forbidden
+% \usepackage{flushend} -- This package is specifically forbidden
+% \usepackage{fontenc} -- This package is specifically forbidden
+% \usepackage{fullpage} -- This package is specifically forbidden
+% \usepackage{geometry} -- This package is specifically forbidden
+% \usepackage{grffile} -- This package is specifically forbidden
+% \usepackage{hyperref} -- This package is specifically forbidden
+% \usepackage{navigator} -- This package is specifically forbidden
+% (or any other package that embeds links such as navigator or hyperref)
+% \indentfirst} -- This package is specifically forbidden
+% \layout} -- This package is specifically forbidden
+% \multicol} -- This package is specifically forbidden
+% \nameref} -- This package is specifically forbidden
+% \usepackage{savetrees} -- This package is specifically forbidden
+% \usepackage{setspace} -- This package is specifically forbidden
+% \usepackage{stfloats} -- This package is specifically forbidden
+% \usepackage{tabu} -- This package is specifically forbidden
+% \usepackage{titlesec} -- This package is specifically forbidden
+% \usepackage{tocbibind} -- This package is specifically forbidden
+% \usepackage{ulem} -- This package is specifically forbidden
+% \usepackage{wrapfig} -- This package is specifically forbidden
+% DISALLOWED COMMANDS
+% \nocopyright -- Your paper will not be published if you use this command
+% \addtolength -- This command may not be used
+% \balance -- This command may not be used
+% \baselinestretch -- Your paper will not be published if you use this command
+% \clearpage -- No page breaks of any kind may be used for the final version of your paper
+% \columnsep -- This command may not be used
+% \newpage -- No page breaks of any kind may be used for the final version of your paper
+% \pagebreak -- No page breaks of any kind may be used for the final version of your paperr
+% \pagestyle -- This command may not be used
+% \tiny -- This is not an acceptable font size.
+% \vspace{- -- No negative value may be used in proximity of a caption, figure, table, section, subsection, subsubsection, or reference
+% \vskip{- -- No negative value may be used to alter spacing above or below a caption, figure, table, section, subsection, subsubsection, or reference
+
+\setcounter{secnumdepth}{0} %May be changed to 1 or 2 if section numbers are desired.
+
+% The file aaai25.sty is the style file for AAAI Press
+% proceedings, working notes, and technical reports.
+%
+
+% Title
+
+% Your title must be in mixed case, not sentence case.
+% That means all verbs (including short verbs like be, is, using,and go),
+% nouns, adverbs, adjectives should be capitalized, including both words in hyphenated terms, while
+% articles, conjunctions, and prepositions are lower case unless they
+% directly follow a colon or long dash
+\title{AlignedKV: Reducing Memory Access of KV-Cache with Precision-Aligned Quantization}
+\author{
+    %Authors
+    % All authors must be in the same font size and format.
+    Yifan Tan\textsuperscript{\rm 1,\rm 2},
+    Haoze Wang\textsuperscript{\rm 1,\rm 2},
+    Chao Yan\textsuperscript{\rm 2},
+    Yangdong Deng\textsuperscript{\rm 1,}\thanks{corresponding author}
+}
+\affiliations{
+    %Afiliations
+    \textsuperscript{\rm 1}School of Software, Tsinghua University\\
+    \textsuperscript{\rm 2}Sunlune\\
+    tanyifan2001@gmail.com
+}
+
+%Example, Single Author, ->> remove \iffalse,\fi and place them surrounding AAAI title to use it
+\iffalse
+\title{My Publication Title --- Single Author}
+\author {
+    Author Name
+}
+\affiliations{
+    Affiliation\\
+    Affiliation Line 2\\
+    name@example.com
+}
+\fi
+
+\iffalse
+%Example, Multiple Authors, ->> remove \iffalse,\fi and place them surrounding AAAI title to use it
+\title{My Publication Title --- Multiple Authors}
+\author {
+    % Authors
+    First Author Name\textsuperscript{\rm 1,\rm 2},
+    Second Author Name\textsuperscript{\rm 2},
+    Third Author Name\textsuperscript{\rm 1}
+}
+\affiliations {
+    % Affiliations
+    \textsuperscript{\rm 1}Affiliation 1\\
+    \textsuperscript{\rm 2}Affiliation 2\\
+    firstAuthor@affiliation1.com, secondAuthor@affilation2.com, thirdAuthor@affiliation1.com
+}
+\fi
+
+
+% REMOVE THIS: bibentry
+% This is only needed to show inline citations in the guidelines document. You should not need it and can safely delete it.
+\usepackage{bibentry}
+% END REMOVE bibentry
+
+% define colors for everyone
+\newcommand{\haoze}[1]{\textcolor{blue}{#1}}
+\newcommand{\tyf}[2]{\textcolor{red}{#1}{#2}}
+
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+% As the scale of LLMs rapidly expands, the lengthy inference time has emerged as a significant impediment to their practical applications.
+% Model quantization has shown great potential in addressing the problem.
+Model quantization has become a crucial technique to address the issues of large memory consumption and long inference times associated with LLMs.
+Mixed-precision quantization, which distinguishes between important and unimportant parameters, stands out among numerous quantization schemes as it achieves a balance between precision and compression rate.
+However, existing approaches can only identify important parameters through qualitative analysis and manual experiments without quantitatively analyzing how their importance is determined.
+To address this deficiency, we propose a new scheme called "precision alignment".
+This promising criterion offers a quantitative framework to holistically evaluate the importance of numbers in mixed-precision quantization.
+Our observations on floating point addition under various real-world scenarios suggest that two addends should have identical precision, otherwise the information in the higher-precision number will be wasted.
+Such an observation offers an essential principle to determine the precision of each parameter in matrix multiplication operation.
+As the first step towards applying the above discovery to large model inference, we develop a dynamic KV-Cache quantization technique to effectively reduce memory access latency.
+Different from existing quantization approaches that focus on memory saving, this work directly aims to accelerate LLM inference through quantifying floating numbers.
+The proposed technique attains a 22\% saving of memory access and delivers up to 1.3× speedup in the computation of attention in the decoding phase of LLM, with almost no loss of precision.
+\end{abstract}
+
+% Uncomment the following to link to your code, datasets, an extended version or similar.
+%
+\begin{links}
+    \link{Code}{https://github.com/YF-T/AlignedKV}
+%     \link{Datasets}{https://aaai.org/example/datasets}
+%     \link{Extended version}{https://aaai.org/example/extended-version}
+\end{links}
+
+\section{Introduction}
+
+Recently, Large Language Models (LLMs) have become an important force to revolutionize human life.
+The emergent capability of LLMs, however, depends on its huge number of parameters, which have to incur significant overhead in terms of large memory consumption, intensive computational cost, and high memory latency.
+As an effective way to deal with the abovementioned problems, model quantization has attracted heavy research effort \citep{zhu2023survey, yuan2024llm}.
+In these works, some methods, such as integer-only networks, aim to improve computational speed, while others are dedicated to reducing memory latency by cutting down the volume of memory access. Our approach belongs to the latter.
+
+An essential problem for quantization techniques is to achieve a high compression ratio and at the same time maintain a sufficient level of precision. Among various quantization methods, mixed-precision quantization stands out for its ability to reach such a balance. Researchers \citep{dettmers2022gpt3,lee2024owq} already notice that not all values in a model are equally important, and quantizing important values into higher precision can alleviate the precision loss caused by quantization. However, three questions have to be systematically resolved before we can exploit the full potential of  mixed-precision quantization:
+
+\begin{itemize}
+    \item How to define the importance of numbers?
+    \item How accurate are required for important numbers and unimportant numbers respectively?
+    \item Are important numbers always important?
+\end{itemize}
+
+In this paper, we introduce a new criterion called precision alignment to holistically answer the first two questions. The criterion is inspired by the uncertainty calculation commonly used in physics \citep{UncertaintyCalculate}. When performing an addition operation, the uncertainty of the result is close to the bigger one of the uncertainties of two attends, while the smaller one has a much less impact. Therefore, the most economical solution is to align the uncertainties of the two addends to the bigger one. By applying the criterion to the addition operation in matrix multiplication, we find the answer to the first two questions: the accuracy of a parameter should be chosen to support a consistent uncertainty between parameters involved in addition operation.
+
+For the third question, generally our analysis tends to give a negative answer, although for many cases the answer can be yes. A similar conclusion is reached by \cite{dong2024qaq}. In summary, although there are strategies to predict future importance \citep{xiao2023efficient, sheng2023flexgen}, static quantization methods have inherent limitations. In this work, we develop a dynamic KV-Cache quantization scheme to avoid these limitations.
+
+Based on the precision alignment criterion, we develop a quantization framework that systematically evaluates the importance of parameters and dynamically determines the number of bits to be read. As the first step towards applying the criterion to large model computations, we develop a dynamic KV-Cache quantization scheme that reduces the volume of memory access for the KV-Caches by 22\% and achieves an up to 1.3× speedup in Attention Block with almost no loss of precision during decoding phase of LLM. Our contributions are as follows:
+
+\begin{enumerate}
+\item We proposed a metric for quantitatively evaluating the importance and precision of each number in mixed-precision quantization. To be best knowledge of the authors, this is the first work of quantitative measurement in this area.
+\item We proposed a dynamic quantization scheme that allows for on-demand data quantization, without the need for online predicting the future importance of data. The key idea of our work is to read only the bits needed for parameters in KV-Caches during the calculation of LLM’s Attention Block. For some numbers, only the first 11 or 12 bits are necessary to guarantee the accuracy of the result, although they are saved with the Float16 format.
+\item Our study measures the importance of different channels in the K-Cache varies, allowing for the allocation of varying precision. Meanwhile, the importance of different tokens in the V-Cache varies, allowing for allocation of varying precision.
+\end{enumerate}
+
+\section{Related Works}
+
+\subsection{LLM Quantization with Outliers}
+
+Model quantization is a mature technique used to reduce memory usage and accelerate inference speed when deploying large models. During quantization, outliers have greater impacts on results and require higher precision than normal parameters \citep{dettmers2022gpt3}. To deal with these tough outliers, some methods \citep{li2023llm, lee2024owq, dettmers2023spqr, kim2023squeezellm} choose to treat outlier and normal numbers respectively. They decompose the weight matrix into a dense quantified matrix and a sparse high-precision matrix to store the outliers, then calculate with them separately. Besides, some methods blend outliers into normal parameters. Rotation \citep{lin2024rotation} treats matrices as a combination of vectors and randomly rotates them to hide outliers behind normal values. SmoothQuant \citep{xiao2023smoothquant} and AWQ \citep{lin2024awq} scale outliers to fit other elements and multiply them by coefficients after dequantization.
+
+The methods above can only identify important parameters by qualitative analysis and manual experiments. They only select the largest elements as outliers and retain full precision for these outliers, lacking quantitative analysis. On the other hand, methods that analyze the importance of numbers quantitatively \citep{park2024any, kloberdanz2023mixquant} only focus on the importance of a matrix or a layer from a macroscopic perspective. We are the first job to analyzes the importance of each number quantitatively.
+
+\subsection{KV-Cache Compression and Quantization}
+
+KV-Cache is an optimization to save lots of calculations, but at the expense of huge storage consumption and memory access latency. It's necessary to reduce the expense. Early works \citep{liu2024scissorhands, ge2023model, zhang2024h2o} evites useless tokens to save memory. Some methods \citep{zhang2024pyramidkv, yang2024pyramidinfer} based on this way find that the required number of tokens decreases as the layer becomes deeper. Some quantization methods like KIVI \citep{liu2024kivi} also take different measures to quantize KV-Cache to 4bits or 2bits. KIVI suggest that the key cache should be quantified per channel, and the value cache should be quantified per token.
+
+As the self-attention mechanism naturally assigns importance to tokens through their scores, mixed-precision quantization is naturally introduced into the quantization of KV-Cache. There are some methods \citep{yang2024no, he2024zipcache, yue2024wkvquant, liu2024intactkv} quantize tokens to different precision based on their scores, while other methods \citep{kang2024gear, dong2024qaq} pick outliers out of matrices and save them with high precision.
+
+Currently, most methods aim to save memory occupied by KV-Cache. They spend more time on LLM inference because of quantization and dequantization costs. AlignedKV is the first work that aims to reduce the memory access latency of KV-Cache. As the memory latency is more than ten times higher than the computational latency in this part, we consider this target to be equally important as reducing storage usage.
+
+\section{Precision Alignment Criterion}
+
+\subsection{Uncertainty Calculation and LLM Quantization}
+
+In physics, measurements of physical quantities are often not exact. Therefore, in numerical representation, they are usually expressed in the form of $number\pm uncertainty$, indicating that the result falls within this range. Physics has also established a set of rules for calculating with such numbers, which is called uncertainty calculation \citep{UncertaintyCalculate}.
+
+Uncertainty calculation is closely related to LLM quantization. From the perspective of uncertain calculation, we can represent the pre-quantified matrix $W$ as the quantified matrix $W_{quant}$ and an uncertainty $\Delta W$. Therefore, we can express the matrix multiplication of the activation values A and the quantified weights W as the following form of uncertainty computation (the multiplication of Q and quantified $K^T$, S and quantified V follows the same pattern):
+$$AW = A\left( {W_{quant} \pm \mathrm{\Delta}W} \right)$$
+
+We can consider the matrix multiplication above as a combination of two fundamental operations: 1) multiplication of a number from A and a number from W, which corresponds to scalar multiplication in uncertainty calculation; 2) addition of the results from step 1), which corresponds to addition in uncertainty calculation.
+
+Uncertainty addition is represented as follow:
+$$(x \pm \mathrm{\Delta}x) + (y \pm \mathrm{\Delta}y) = (x + y) \pm (\mathrm{\Delta}x + \mathrm{\Delta}y)$$
+
+The sum of x with uncertainty $\Delta x$ added to y with uncertainty $\Delta y$ equals to x+y with uncertainty $\Delta x + \Delta y$. It’s easy to understand because when it comes to the worst case that uncertainties of both addends reach their extremes and have the same sign, the offset of the result is equal to the sum of uncertainties of the two numbers.
+
+uncertainty scalar multiplication is represented as follows:
+$$s \times (x \pm \mathrm{\Delta}x) = sx \pm s\mathrm{\Delta}x$$
+
+It’s also easy to understand as s scales the uncertainty $\Delta x$ when it scales the number x itself.
+
+\subsection{Precision Alignment in Floating-Point Addition}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\columnwidth]{CameraReady/LaTeX/图片1.png}
+  \caption{The format of float16}
+  \label{fig:my_label}
+\end{figure}
+
+Floating-point numbers are widely used in computers. Particularly, in deep learning, the most used is float16 floating-point format (also known as half-precision floating-point, FP16). The float16 format consists of 1 sign bit, 5 exponent bits, and 10 mantissa bits, as Figure 1 shows.
+
+Due to limitations and finite precision, floating-point numbers can only represent an approximate form of real numbers instead of real numbers themselves. Therefore, in practice, floating-point numbers also have uncertainty. Take the number in Figure 1 as an example, the actual form of it is $1100.010110\pm0.0000001$ (In binary representation, similarly hereinafter).
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\columnwidth]{CameraReady/LaTeX/图片2.png}
+  \caption{Addition with float16 datatype}
+  \label{fig:my_label}
+\end{figure}
+
+Let's take a look at the expression of uncertainty addition. We can find that the uncertainty of the result is always greater than the uncertainty of any of the addends, which means there is no need to let an addend be more precise than another’s uncertainty. Otherwise, the following situation would occur: supposing we add $0.001\pm0.0001$ with $1\pm0.1$, the result is $1.001\pm0.1001$, which indicates the second 1 of 1.001 is uncertain and useless. Therefore, we arrive at a conclusion: in uncertainty addition of floating-point numbers, it’s preferable for the uncertainties of the two numbers to be consistent. This is what we called “precision alignment” criterion.
+
+In practical operations, inconsistent uncertainty can also lead to issues, as illustrated in Figure 2. We can find that the last few digits of the addend below do not have corresponding positions for the addend above, nor do they have corresponding positions for the results. Thus, these digits are wasted for their absent on result computation. Therefore, the opposite of precision alignment has emerged---precision waste.
+
+In the previous text, we described two types of precision waste---positions without corresponding values among the other addends and positions without corresponding values in the result. Consequently, we have identified two forms of precision alignment---precision alignment on addends and precision alignment on result.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\columnwidth]{CameraReady/LaTeX/图片3.png}
+  \caption{Precision Alignment on Attends}
+  \label{fig:my_label}
+\end{figure}
+
+\textbf{Precision Alignment on Attends:} When we add a number with uncertain precision to numbers with known precision, as Figure 3 shows, to avoid precision waste, we hope this number have the same precision as the other numbers. Otherwise, the certainty of the extra bits in the result cannot be guaranteed.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\columnwidth]{CameraReady/LaTeX/图片4.png}
+  \caption{Precision Alignment on Result}
+  \label{fig:my_label}
+\end{figure}
+
+\textbf{Precision Alignment on Result:} When adding many numbers with uncertain precision, but knowing the precision of the result, as Figure 4 shows, to avoid precision waste, we hope these numbers have the same precision as the result. Otherwise, the result cannot store a number with such high precision.
+
+These two forms are equivalent in the vast majority of cases. We will use them to how precise numbers are quantified.
+
+\subsection{Precision Alignment in GEMM}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\columnwidth]{CameraReady/LaTeX/图片5.png}
+  \caption{GEMM from 3D prospective}
+  \label{fig:my_label}
+\end{figure}
+
+As mentioned earlier, matrix multiplication consists of two fundamental operations—scalar multiplication and addition. We can understand matrix multiplication from a 3D perspective, as Basil Hosmer described \citep{3DGEMM}, where matrix multiplication corresponds to a large cube, with the two matrices involved in the multiplication and the result corresponding to the three faces of the cube, as Figure 5 shows. In this correspondence, the scalar multiplication operation represents the smaller cubes, while summing the results of the scalar multiplications corresponds to the addition between the smaller cubes in the horizontal dimension.
+
+Due to the presence of addition in matrix multiplication, we can also apply precision alignment in addition to help determine the quantization precision required for the elements within the matrix. Like precision-aligned addition, there are two forms of precision-aligned GEMM.
+
+\textbf{Precision Alignment on Attends:} Taking matrix multiplication O = AW as an example, when we know the approximate magnitudes of the elements in matrices A and W, we can determine the approximate magnitude of the intermediate results of the scalar multiplication, which are the addends of addition. This allows us to perform precision alignment on the addition of these intermediate results. Furthermore, the alignment of the multiplication results will reflect back on the alignment of the input matrix W, as we can infer this through the rules governing uncertain scalar multiplication.
+
+\textbf{Precision Alignment on Results:} Still taking matrix multiplication O = AW as an example, when we have an approximate understanding of the magnitudes of the elements in O (which can be achieved through various prediction methods), we effectively gain insight into the magnitude of the sum operation's result. This allows us to perform precision alignment on the addition of the intermediate results, thereby determining the precision requirements for these intermediate results. Subsequently, we can infer the precision requirements for the input matrix W based on the approximate magnitudes of the elements in A.
+
+The precision alignment methods for these two forms of GEMM will be applied in AlignedKV. Typically, in computations related to the KV-cache, a special case of GEMM---GEMV (matrix-vector multiplication)---is utilized. This simplifies the derivation of precision requirements from intermediate results to origin matrixes.
+
+\section{Framework}
+
+
+
+\section{Implementation of AlignedKV}
+
+\subsection{Dynamic Quantization}
+
+In the current field of quantization, the vast majority of quantization methods are static, with only a small fraction employing dynamic quantization based on data \citep{wang2021spatten}. This is closely related to the purpose of quantization; most quantization techniques aim to save storage space, which necessitates the use of static quantization.
+
+However, in the context of KV-cache, there is not a compelling reason to exclusively choose static quantization. On one hand, in addition to saving storage space, quantization can also reduce memory access latency, which is a bottleneck for the inference speed in the Attention mechanism. On the other hand, static quantization introduces a significant challenge for the mixed-precision quantization of KV-cache, as it requires determining the importance of a number at the time of quantization. Although there are numerous methods available to predict the importance of numbers to address this issue (continuity assumption)\citep{ge2023model, liu2024scissorhands}, these predictions are always subject to counterexamples \citep{dong2024qaq}.
+
+We propose a method for dynamically quantizing KV-cache data, which quantize data when it is used. When storing the KV-cache, we maintain additional data structures to store the approximate magnitudes of the KV-cache elements, which is one of the conditions for precision alignment. Afterwards, during the computation of $QK^T$ and $SV$, we use the precision alignment principle to determine the required precision for each element in K and V.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\columnwidth]{CameraReady/LaTeX/图片6.png}
+  \caption{Dynamically truncate numbers with different importance while loading numbers from memory}
+  \label{fig:my_label}
+\end{figure}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{CameraReady/LaTeX/图片8.png}
+  \caption{The distribution of exponent bits for K-Cache (left), Score (middle) and V-Cache (right)}
+  \label{fig:my_label}
+\end{figure*}
+
+We then retrieve only the necessary number of bits from memory on an as-needed basis, as illustrated in the Figure 6. According to the results of the precision alignment principle, we read all 16 bits for important numbers, the first 12 bits for less important numbers, and the first 8 bits for particularly unimportant numbers. The remaining bits are filled with 100... to minimize precision loss to the greatest extent possible.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\columnwidth]{CameraReady/LaTeX/图片7.png}
+  \caption{Data rearrangement for hardware friendliness}
+  \label{fig:my_label}
+\end{figure}
+
+At the same time, to address the issue of hardware reading at a minimum unit of several bytes, we rearrange the numbers to ensure continuity in hardware reading, as shown in Figure 8.
+
+\subsection{Quantization of K-Cache}
+
+The implementation of AlignedKV follows the process outlined below, applicable to both K-Cache and V-Cache:
+
+\begin{enumerate}
+\item Obtain the approximately magnitude information of the numbers in KV-Cache by an additional data structure, preparing the data for precision alignment. We only need the order of magnitude information.
+\item Apply precision alignment criterion to determine the required precision for loading each data element.
+\item Perform truncation on the data elements using dynamic quantization methods while loading data from GPU memory to L1 cache.
+\end{enumerate}
+
+Among these, the latter two have already been addressed in the previous sections, leaving only the first step, which requires specific strategies based on the characteristics of the data.
+
+Based on observations of the K-Cache, we found that the data distribution exhibits a columnar characteristic, where the data within a single column is relatively similar and the data between different columns varies significantly, as shown in Figure 7. In other words, we can use a single value from a column (specifically, the maximum value) to represent the order of magnitude for that column.
+
+Thus, we maintain the maximum value information for each column of the K-Cache, which is recorded as $K_{colmax}$. When computing $QK^T$, we first use the value of $Q$ (already in L1-Cache) along with the values of $K_{colmax}$ to estimate the order of magnitude of the intermediate results. Then, we can determine the precision alignment of the intermediate results by Precision Alignment on Attends, which allow us to infer the required bit width for each element in the K-Cache. All of this is derived quantitatively, rather than merely through qualitative analysis.
+
+Then we load the required bits of each number from memory using dynamic quantization methods. In this way, we avoid loading a large amount of redundant bits from GPU memory, which significantly reduces the memory access latency for this part.
+
+\subsection{Quantization of V-Cache}
+
+\begin{table*}[t]
+    \centering
+    \renewcommand\arraystretch{1.6}
+    \begin{tabular}{|c|c|c|c|c|c|c|c|}
+    \hline
+        \multirow{2}{*}{Type} & \multirow{2}{*}{Method} & \multicolumn{6}{c|}{Proportions of each Relative Error Range} \\ \cline{3-8}
+        & & 0 & (0,1/1024) & [1/1024, 1/512) & [1/512, 1/256) & [1/256, 1/128) & [1/128, inf) \\ \hline
+        \multirow{2}{*}{$QK^T$} & AlignedKV & 57.13\% & 34.32\% & 6.47\% & 1.27\% & 0.43\% & 0.37\% \\ \cline{2-8}
+        & Truncated to 13 bits & 23.16\% & 36.89\% & 29.80\% & 7.66\% & 1.48\% & 1.02\% \\ \hline
+        \multirow{2}{*}{$SV$} & AlignedKV & 70.87\% & 21.40\% & 4.52\% & 1.76\% & 0.80\% & 0.65\% \\ \cline{2-8}
+        & Truncated to 13 bits & 19.64\% & 30.68\% & 27.02\% & 12.63\% & 5.32\% & 4.73\% \\ \hline
+    \end{tabular}
+    \caption{The distribution of relative error for result of AlignedKV (compare with normal result without any quantization)}
+    \label{table1}
+\end{table*}
+
+Similar to the quantization of K-Cache, the quantization of V-Cache also requires obtaining approximate order of magnitude information for the addends or results in order to apply precision alignment criterion. However, unlike K-Cache, V-Cache does not exhibit a columnar distribution characteristic, which prevents us from applying the quantization method used for K-Cache. Fortunately, we observed that the magnitude differences among the numbers in Score matrix (record as S) are quite significant, as shown in Figure 7, which means that we only need to compute the product of a subset of the larger elements in S with the corresponding V to obtain an approximate estimation of final results.
+
+We first select the top k largest values from the score matrix S using an approximate top-k algorithm (we don’t use the exact top-k algorithm for speed) and multiply them by their corresponding V values to obtain an estimate of the SV result, referred to as $O_{est}$. Subsequently, we can determine the precision alignment of the intermediate results by Precision Alignment on  Result using $O_{est}$. Similar to the quantization of K-Cache, the alignment of the intermediate results allows us to infer the required bit width for each element in V-Cache. We can then reduce memory access latency by reading only the necessary bits for each element.
+
+\section{Experiments}
+
+\subsection{Experiments Setup}
+
+To validate the effectiveness of our proposed method, we designed several sets of experiments. We conducted our experiments using real data from the Llama-2-7b model, and in the final experiment, we directly ran the code of Llama-2-7b with the KV-Cache replacement. Although using specialized hardware would yield better results, we implemented our method on CUDA. We used an Nvidia V100 GPU to run our experiments.
+
+\subsection{Reduction in Bit Width}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\columnwidth]{CameraReady/LaTeX/图片9.png}
+  \caption{Average bit width of KV-Cache}
+  \label{fig:my_label}
+\end{figure}
+
+We conducted experiments using the AlignedKV method on the actual data generated by Llama-2-7B. We statistically analyzed the alignment of actual accuracy and the number of bits required for each value in the KV-cache. The results are illustrated in Figure 9. The results clearly demonstrate that after applying the AlignedKV method, the average bit width for each value decreased from 16 to approximately 12.5, which significantly reduce the memory access latency of KV-cache.
+
+\subsection{Accuracy of GEMM Result}
+
+In quantization, it is essential to consider not only the compression rate but also the accuracy. In the experiments introduced in previous section, we also analyzed the impact of applying AlignedKV on the accuracy of the results. We recorded the changes in $QK^T$ and $SV$ GEMM after using AlignedKV and represent these changes through the distribution of relative errors.
+
+We use the following formula to calculate the relative error for each value in the results:
+
+$$
+{\rm relative\ error}=\frac{|R_{AlignedKV}-R_{normal}|}{R_{normal}}
+$$
+
+\begin{align*}
+    {\rm where} \  & R_{AlignedKV} = QK_{AlignedKV}^T {\rm \ or\ } SV_{AlignedKV} \\
+    {\rm and} \  & R_{normal} = QK_{normal}^T {\rm \ or\ } SV_{normal}
+\end{align*}
+
+We calculated the relative error for each value in the result matrix and observed their distribution, as shown in Table 1. Notably, although AlignedKV reduced the precision of the numbers by 3.5 bits, most of the results remained unchanged. In contrast, uniformly removing 3 bits from each number yielded significantly poorer results, despite this approach achieving a lower compression rate than AlignedKV. This indicates that by quantitatively analyzing the bit-width requirements for each number and let them achieving a state of "alignment," we can take both high compression rate and high accuracy.
+
+\subsection{Runtime Test of AlignedKV}
+
+Additionally, we recorded the actual runtime. We simulated the inference process using Llama-2-7B, inputting 128 tokens and generating up to 4000 tokens (the model's maximum context length is 4096). To highlight the effectiveness of our, we only focused on the computations involved in the KV-Cache component. The calculations are as follows:
+
+\begin{align*}
+    S&=QK^T/\sqrt{128} \\
+    S&=softmax(S) \\
+    O&=SV
+\end{align*}
+
+We focused on this process because we wanted to avoid having other latencies overshadow our efforts. For instance, while we accelerated the computation speed of the Attention component by 20\%, including the time taken by the FFN component in both the numerator and denominator might reduce the overall speedup to only 10\%. However, when the context length reaches the scale of hundreds of thousands or even millions, the memory access latency of the KV-Cache will become the bottleneck for the entire model's running speed during decoding phase. At this point, the benefits of AlignedKV will be substantial.
+
+We compared AlignedKV with the native implementation in Torch, as well as two other quantization methods——KIVI and GEAR. Since the implementation of AlignedKV utilizes CUDA operators, we created a control group using AlignedKV's code to avoid the additional overhead associated with CUDA programming, letting us focus on the memory access reduction AlignedKV brings. The only difference between the control group and AlignedKV is that the control group does not perform any truncation; all numbers are loaded as 16-bit values.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\columnwidth]{CameraReady/LaTeX/图片10.png}
+  \caption{Run time of AlignedKV and other methods}
+  \label{fig:my_label}
+\end{figure}
+
+The runtime results are displayed in Figure 10. Initially, we observe that AlignedKV is relatively slow. This is primarily due to the overhead associated with initializing CUDA operators and the additional data structure maintenance required by AlignedKV, which constitutes a significant portion of the total runtime. As the token position increases, the length of the KV-Cache also grows, at which point the advantages of AlignedKV in reducing memory access latency become apparent. In the later stages of token generation, AlignedKV's speed is only slightly behind that of the native Torch implementation. Furthermore, the growth rate of AlignedKV's runtime with increasing token positions is notably slower compared to that of the native Torch implementation.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\columnwidth]{CameraReady/LaTeX/图片11.png}
+  \caption{Predicted run time of AlignedKV and other methods on extended context range}
+  \label{fig:my_label}
+\end{figure}
+
+Based on Figure 10, we can extrapolate the performance of these five methods for longer context lengths. We fitted the data with a quadratic function and extended the x-axis to generate a predicted results graph, as shown in Figure 11. In Figure 11, we observe that AlignedKV emerges as the fastest method for long contexts, even surpassing the speed of the native Torch implementation.
+
+The advantages of AlignedKV in reducing memory access latency increase with the context length, while the additional overhead introduced remains constant. As the context length grows, the benefits of reduced memory access will inevitably outweigh the constant overhead, leading to improved overall performance.
+
+\section{Conclusion}
+
+Currently, mixed-precision quantization has primarily remained at the stage of qualitative analysis, often relying on experiments to select a bit-width that performs better, without a quantitative theoretical framework for determining the optimal bit-width for each number. Our proposed "Precision Alignment" criterion effectively addresses this issue, enabling us to derive the optimal bit-width for each number through theoretical analysis rather than relying solely on experimentation. This approach allows us to achieve both high compression rates and high accuracy.
+
+Furthermore, we implemented a dynamic quantization method based on this theory, which quantizes the KV-Cache to reduce memory access latency. This method can significantly accelerate the inference speed of the Attention component during the decoding phase while incurring minimal loss in accuracy.
+
+\section{Acknowledgments}
+
+This work is supported by Sunlune Company. We sincerely thank all the reviewers for their valuable feedback and suggestions.
+
+\bibliography{aaai25}
+
+\end{document}

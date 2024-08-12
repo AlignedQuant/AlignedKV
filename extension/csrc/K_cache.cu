@@ -34,7 +34,7 @@ __global__ void k_cache_save_prefill_kernel(unsigned char* k_cache_first_8_data,
                                             const int stride_batch_k_new,
                                             const int stride_seq_k_new,
                                             const int stride_kvhead_k_new){
-    int block_start_seq = blockIdx.z * d_block + start_pos;
+    int block_start_seq = blockIdx.z * d_block;
     int start_pos_block = start_pos / d_block;
     int block_end_seq = block_start_seq + d_block < seqlen ? block_start_seq + d_block : seqlen;
     for(int seq = block_start_seq; seq < block_end_seq; ++seq){

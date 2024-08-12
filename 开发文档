@@ -10,3 +10,5 @@ huggingface-cli download --resume-download gpt2 --local-dir gpt2
 wget https://hf-mirror.com/hfd/hfd.sh
 
 huggingface-cli download --resume-download meta-llama/Llama-2-7b-hf
+
+不能用困惑度，因为不是推理
