@@ -133,3 +133,9 @@ class QuantizedCache_AlignedKV(Cache):
             return self.prefill(q, k, v, seqlen, mask, layer_id)
         else:
             return self.decoding(q, k, v, start_pos, seqlen, mask, layer_id)
+
+    def savekv(self, k: torch.Tensor, v: torch.Tensor, layer_id: int):
+        seqlen = k.shape[1]
+        start_pos = self.get_seq_length(layer_id)
+        self.key_cache[layer_id].save(k, start_pos, seqlen)
+        self.value_cache[layer_id].save(v, start_pos, seqlen)
