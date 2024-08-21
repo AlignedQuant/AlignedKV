@@ -35,3 +35,8 @@ max_cache_len = 30
 # input data
 prompt = "Hey, are you conscious? Can you talk to me?"
 ```
+
+## Run Experiment
+Please switch the branch to `evaluate` to run the experiment.
+
+You can read the `README.md` in the `evaluate` branch to get more information.
