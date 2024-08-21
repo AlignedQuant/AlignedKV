@@ -15,9 +15,10 @@ from model.Llama_AlignedKV import LMEvalLlamaForCausalLM_AlignedKV
 
 # config
 # tasks in {coqa, truthfulqa_gen, gsm8k}
-task_list = ["truthfulqa_gen", "gsm8k"] # "coqa", "truthfulqa_gen", "gsm8k"
+task_list = ["coqa", "truthfulqa_gen", "gsm8k"] # "coqa", "truthfulqa_gen", "gsm8k"
 device = "cuda:0"
-model_path = "/data/coding/AlignedKV/llama2-7b/"
+model_path = "meta-llama/Llama-2-7b-hf"
+kvcache_type = "alignedKV" # "alignedkv", "static", "kivi"
 
 model = LMEvalLlamaForCausalLM_AlignedKV(
                 pretrained=model_path,
@@ -26,7 +27,7 @@ model = LMEvalLlamaForCausalLM_AlignedKV(
                 batch_size=12,
                 device=device,
                 attn_implementation="eager",
-                key_value_cache_class="alignedKV", # "alignedkv", "static"
+                key_value_cache_class=kvcache_type,
             )
 # model = HFLM(pretrained=model_path, max_length=2048, batch_size=12, device=device)
 

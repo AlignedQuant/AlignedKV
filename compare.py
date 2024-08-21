@@ -1,6 +1,6 @@
 import torch
 from transformers import AutoTokenizer
-from transformers.cache_utils import StaticCache
+from transformers.cache_utils import StaticCache, QuantizedCacheConfig, QuantoQuantizedCache
 from model.Llama_AlignedKV import LlamaForCausalLM_AlignedKV
 from model.KVCache_AlignedKV import QuantizedCache_AlignedKV
 
@@ -9,7 +9,7 @@ batch_size = 1
 max_len = 128
 device = "cuda:0"
 cache_dtype = torch.float16
-model_path = "./llama2-7b/"
+model_path = "meta-llama/Llama-2-7b-hf"
 
 model = LlamaForCausalLM_AlignedKV.from_pretrained(model_path, attn_implementation="eager", torch_dtype=torch.half)
 tokenizer = AutoTokenizer.from_pretrained(model_path)
@@ -38,4 +38,11 @@ KV_Cache2 = StaticCache(model.config, batch_size, max_len, device, cache_dtype)
 generate_ids2 = model.generate(inputs.input_ids, max_length=max_len, past_key_values=KV_Cache2, use_cache=True, num_beams=1, do_sample=False, temperature=None, top_p=None)
 generate_text2 = tokenizer.batch_decode(generate_ids2, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
 print(generate_text2)
+print("===================================")
+
+quantizedconfiig = QuantizedCacheConfig(axis_value=-1, device=device)
+KV_Cache3 = QuantoQuantizedCache(quantizedconfiig)
+generate_ids3 = model.generate(inputs.input_ids, max_length=max_len, past_key_values=KV_Cache3, use_cache=True, num_beams=1, do_sample=False, temperature=None, top_p=None)
+generate_text3 = tokenizer.batch_decode(generate_ids3, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
+print(generate_text3)
 print("===================================")

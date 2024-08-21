@@ -317,38 +317,41 @@ class LlamaForCausalLM_AlignedKV(LlamaForCausalLM):
         # Initialize weights and apply final processing
         self.post_init()
 
+
 import os
 import transformers
 from lm_eval.models.huggingface import HFLM, eval_logger
 from lm_eval import utils
-from lm_eval.models.utils import stop_sequences_criteria
+from lm_eval.models.utils import stop_sequences_criteria, get_dtype
 # from accelerate import Accelerator, DistributedType
-from transformers.cache_utils import StaticCache
+from transformers.cache_utils import StaticCache, QuantizedCacheConfig, QuantizedCache, QuantoQuantizedCache, \
+    HQQQuantizedCache
 from model.KVCache_AlignedKV import QuantizedCache_AlignedKV
 
 
 class LMEvalLlamaForCausalLM_AlignedKV(HFLM):
     AUTO_MODEL_CLASS = None
-    _DEFAULT_MAX_LENGTH = 4096
+    _DEFAULT_MAX_LENGTH = 2048
+
     def _create_model(
-        self,
-        pretrained: str,
-        revision: Optional[str] = "main",
-        dtype: Optional[Union[str, torch.dtype]] = "auto",
-        trust_remote_code: Optional[bool] = False,
-        # arguments used for splitting a model across GPUs naively.
-        # only used if `parallelize=True`.
-        # (accelerate naive PP (device_map) options)
-        parallelize: Optional[bool] = False,
-        gpus: Optional[int] = None,
-        max_memory_per_gpu: Optional[Union[int, str]] = None,
-        max_cpu_memory: Optional[Union[int, str]] = None,
-        offload_folder: Optional[str] = "./offload",
-        # PEFT, delta weights and quantization options
-        peft: Optional[str] = None,
-        delta: Optional[str] = None,
-        autogptq: Optional[Union[bool, str]] = False,
-        **kwargs,
+            self,
+            pretrained: str,
+            revision: Optional[str] = "main",
+            dtype: Optional[Union[str, torch.dtype]] = "auto",
+            trust_remote_code: Optional[bool] = False,
+            # arguments used for splitting a model across GPUs naively.
+            # only used if `parallelize=True`.
+            # (accelerate naive PP (device_map) options)
+            parallelize: Optional[bool] = False,
+            gpus: Optional[int] = None,
+            max_memory_per_gpu: Optional[Union[int, str]] = None,
+            max_cpu_memory: Optional[Union[int, str]] = None,
+            offload_folder: Optional[str] = "./offload",
+            # PEFT, delta weights and quantization options
+            peft: Optional[str] = None,
+            delta: Optional[str] = None,
+            autogptq: Optional[Union[bool, str]] = False,
+            **kwargs,
     ) -> None:
         """
         Initializes an HF or HF-compatible PreTrainedModel from scratch
@@ -381,6 +384,9 @@ class LMEvalLlamaForCausalLM_AlignedKV(HFLM):
             self.key_value_cache = QuantizedCache_AlignedKV
         elif self.key_value_cache_class.lower() == "static":
             self.key_value_cache = StaticCache
+        elif self.key_value_cache_class.lower() == "kivi":
+            self.key_value_cache = HQQQuantizedCache
+            self.kvcache_config = QuantizedCacheConfig(axis_value=1, device=self.device)
         else:
             raise ValueError(f"Unsupported key-value cache class: {self.key_value_cache_class}")
 
@@ -428,9 +434,17 @@ class LMEvalLlamaForCausalLM_AlignedKV(HFLM):
         stopping_criteria = stop_sequences_criteria(
             self.tokenizer, stop, context.shape[1], context.shape[0]
         )
+        # # memroy occupy
+        # print("current memory (byte):", torch.cuda.memory_allocated(device=None))
+        # # print batchsize
+        # print("bsz, seq: ", context.shape)
+        # print("max_length")
         # kv-cache
-        KV_Cache = self.key_value_cache(self.model.config, context.shape[0], max_length, self.device, torch.float16)
-        return self.model.generate(
+        if self.key_value_cache_class.lower() == "kivi":
+            KV_Cache = self.key_value_cache(self.kvcache_config)
+        else:
+            KV_Cache = self.key_value_cache(self.model.config, context.shape[0], max_length, self.device, torch.float16)
+        result = self.model.generate(
             context,
             max_length=max_length,
             past_key_values=KV_Cache,
@@ -439,6 +453,11 @@ class LMEvalLlamaForCausalLM_AlignedKV(HFLM):
             use_cache=True,
             **generation_kwargs,
         )
+        print("input:", context.shape)
+        print(context)
+        print("output:", result.shape)
+        print(result)
+        return result
 
     def get_model_info(self) -> dict:
         """
