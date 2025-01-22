@@ -2,13 +2,14 @@ import math
 from typing import Optional, Dict, Any, Tuple, List
 
 import torch
+from torch import nn
 import torch.nn.functional as F
 from transformers import PretrainedConfig
 from transformers.cache_utils import Cache
 from transformers.utils import is_torchdynamo_compiling, logging
 
-from extension.k_cache_file import K_Cache_Class
-from extension.v_cache_file import V_Cache_Class
+from new_extension.util_kcache import KCache, COLUMN_BLOCK_SELF
+from new_extension.util_vcache import VCache
 
 logger = logging.get_logger(__name__)
 
@@ -16,8 +17,10 @@ logger = logging.get_logger(__name__)
 # 注意是所有层共享一个cache
 # 在模型generate时直接传入就好
 class QuantizedCache_AlignedKV(Cache):
-    def __init__(self, config: PretrainedConfig, max_batch_size: int, max_cache_len: int, device, dtype=None) -> None:
+    def __init__(self, config: PretrainedConfig, max_batch_size: int, max_cache_len: int, device, 
+                 dtype=None, reference=False, use_tensorcore=False):
         super().__init__()
+        max_cache_len = (max_cache_len + COLUMN_BLOCK_SELF - 1) // COLUMN_BLOCK_SELF * COLUMN_BLOCK_SELF
         self.max_batch_size = max_batch_size
         self.max_cache_len = config.max_position_embeddings if max_cache_len is None else max_cache_len
         # Some model define a custom `head_dim` != config.hidden_size // config.num_attention_heads
@@ -29,21 +32,23 @@ class QuantizedCache_AlignedKV(Cache):
         self.num_key_value_heads = (
             config.num_attention_heads if config.num_key_value_heads is None else config.num_key_value_heads
         )
-        assert config.num_attention_heads == self.num_key_value_heads, "We don't support GQA yet."
+        self.num_heads = config.num_attention_heads
+        assert self.num_heads % self.num_key_value_heads == 0, f"num_heads {self.num_heads} must be divisible by num_key_value_heads {self.num_key_value_heads}"
+        self.gqa = self.num_heads // self.num_key_value_heads
 
-        self.key_cache: List[K_Cache_Class] = []
-        self.value_cache: List[V_Cache_Class] = []
-        # Note: There will be significant perf decrease if switching to use 5D tensors instead.
-        cache_shape = (max_batch_size, self.num_key_value_heads, self.max_cache_len, self.head_dim)
-        for idx in range(config.num_hidden_layers):
-            if_register_buffer = is_torchdynamo_compiling()
-            new_key_cache = K_Cache_Class(max_batch_size, self.max_cache_len, self.num_key_value_heads, self.head_dim,
-                                          idx, device, if_register_buffer)
-            new_value_cache = V_Cache_Class(max_batch_size, self.max_cache_len, self.num_key_value_heads, self.head_dim,
-                                            idx, device, if_register_buffer)
-            self.key_cache.append(new_key_cache)
-            self.value_cache.append(new_value_cache)
-        self.reference = False  # debug using
+        self.key_cache: List[KCache] = []
+        self.value_cache: List[VCache] = []
+
+        for _ in range(config.num_hidden_layers):
+            self.key_cache.append(KCache(max_batch_size, self.max_cache_len, self.num_key_value_heads, self.head_dim,
+                                         self.gqa, device, _))
+            self.value_cache.append(VCache(max_batch_size, self.max_cache_len, self.num_key_value_heads, self.head_dim,
+                                           self.gqa, device, _))
+        
+        self.reference = reference
+        self.use_tensorcore = use_tensorcore
+
+        assert dtype is None or dtype == torch.float16, "QuantizedCache_AlignedKV only supports torch.float16"
 
     def update(
             self,
@@ -56,7 +61,9 @@ class QuantizedCache_AlignedKV(Cache):
 
     def get_seq_length(self, layer_idx: Optional[int] = 0) -> int:
         """Returns the sequence length of the cached states that were seen by the model."""
-        return self.key_cache[layer_idx].current_cache_len
+        qlen = self.value_cache[layer_idx].start_pos
+        rlen = 0 if self.value_cache[layer_idx].restv is None else self.value_cache[layer_idx].restv.shape[1]
+        return qlen + rlen
 
     def get_max_length(self) -> Optional[int]:
         """Returns the maximum sequence length of the cached states."""
@@ -69,67 +76,23 @@ class QuantizedCache_AlignedKV(Cache):
             self.key_cache[layer_idx].zerolize()
             self.value_cache[layer_idx].zerolize()
 
-    def prefill_k(self, q: torch.Tensor, k: torch.Tensor, seqlen: int, layer_id: int) -> torch.Tensor:
-        # input: q.shape = (bsz, seqlen, n_local_kv_heads, head_dim)
-        # input: k.shape = (bsz, seqlen, n_local_kv_heads, head_dim)
-        # output: score.shape = (bsz, n_local_kv_heads, seqlen, seqlen)
-        self.key_cache[layer_id].save(k, 0, seqlen)
-        q = q.transpose(1, 2)
-        k = k.transpose(1, 2)
-        scores = torch.matmul(q, k.transpose(2, 3)) / math.sqrt(self.head_dim)
-        return scores
+    def prefill_save_kv(self, k: torch.Tensor, v: torch.Tensor, layer_id: int):
+        self.key_cache[layer_id].prefill_save_k(k)
+        self.value_cache[layer_id].prefill_save_v(v)
 
-    def prefill_v(self, scores: torch.Tensor, v: torch.Tensor, seqlen: int, layer_id: int) -> torch.Tensor:
-        # input: scores.shape = (bsz, n_local_kv_heads, seqlen, seqlen)
-        # input: v.shape = (bsz, seqlen, n_local_kv_heads, head_dim)
-        # output: output.shape = (bsz, seqlen, n_local_kv_heads, head_dim)
-        self.value_cache[layer_id].save(v, 0, seqlen)
-        v = v.transpose(1, 2)
-        output = torch.matmul(scores, v)  # (bs, n_local_heads, seqlen, head_dim)
-        output = output.transpose(1, 2).contiguous()
-        return output
+    def decoding(self, module: nn.Module, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, attention_mask: Optional[torch.Tensor],
+                 scaling: float, dropout: float, layer_id: int) -> torch.Tensor:
+        attn_weights = self.key_cache[layer_id].decoding(q, k, self.reference, self.use_tensorcore)
+        if attention_mask is not None:
+            causal_mask = attention_mask[:, :, :, : attn_weights.shape[-1]]
+            attn_weights = attn_weights + causal_mask
+        attn_weights = F.softmax(attn_weights * scaling, dim=-1, dtype=torch.float32).to(q.dtype)
+        attn_weights = F.dropout(attn_weights, p=dropout, training=module.training)
+        attn_output = self.value_cache[layer_id].decoding(attn_weights, v, self.reference, self.use_tensorcore)
+        return attn_output, attn_weights
 
-    def prefill(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, seqlen: int,
-                mask: torch.Tensor, layer_id: int) -> torch.Tensor:
-        scores = self.prefill_k(q, k, seqlen, layer_id)
-        if mask is not None:
-            scores = scores + mask
-        scores = F.softmax(scores.float(), dim=-1).type_as(q)
-        output = self.prefill_v(scores, v, seqlen, layer_id)
-        return output
-
-    def decoding_k(self, q: torch.Tensor, k: torch.Tensor, start_pos: int, seqlen: int, layer_id: int) -> torch.Tensor:
-        # input: q.shape = (bsz, seqlen, n_local_kv_heads, head_dim)
-        # input: k.shape = (bsz, seqlen, n_local_kv_heads, head_dim)
-        # output: score.shape = (bsz, n_local_kv_heads, seqlen, seqlen)
-        self.key_cache[layer_id].save(k, start_pos, seqlen)
-        return self.key_cache[layer_id].decoding_compute(q, start_pos, seqlen, self.reference)
-
-    def decoding_v(self, scores: torch.Tensor, v: torch.Tensor, start_pos: int, seqlen: int,
-                   layer_id: int) -> torch.Tensor:
-        # input: scores.shape = (bsz, n_local_kv_heads, seqlen, seqlen)
-        # input: v.shape = (bsz, seqlen, n_local_kv_heads, head_dim)
-        # output: output.shape = (bsz, seqlen, n_local_kv_heads, head_dim)
-        self.value_cache[layer_id].save(v, start_pos, seqlen)
-        return self.value_cache[layer_id].decoding_compute(scores, start_pos, seqlen, self.reference)
-
-    def decoding(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, start_pos: int, seqlen: int,
-                 mask: torch.tensor, layer_id: int) -> torch.Tensor:
-        scores = self.decoding_k(q, k, start_pos, seqlen, layer_id)
-        if mask is not None:
-            scores[:, :, :, :start_pos+seqlen] += mask
-        scores = F.softmax(scores.float(), dim=-1).type_as(q)
-        output = self.decoding_v(scores, v, start_pos, seqlen, layer_id)
-        output = output.view(q.shape[0], q.shape[1], q.shape[2], q.shape[3])
-        return output
-
-    def auto_compute(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, layer_id: int,
-                     mask: torch.Tensor = None) -> torch.Tensor:
-        seqlen = q.shape[1]
-        start_pos = self.get_seq_length(layer_id)
-        if mask is not None:
-            mask = mask[:, :, :, :start_pos + seqlen]
-        if start_pos == 0:
-            return self.prefill(q, k, v, seqlen, mask, layer_id)
-        else:
-            return self.decoding(q, k, v, start_pos, seqlen, mask, layer_id)
+    def is_prefill(self, layer_id: int = 0) -> bool:
+        return self.get_seq_length(layer_id) == 0
+    
+    def prefill_save_o(self, o: torch.Tensor, layer_id: int):
+        self.value_cache[layer_id].prefill_o_list(o)

@@ -1,0 +1,61 @@
+import os
+import argparse
+import json, tqdm
+import torch
+import copy
+
+import math
+import time
+from lm_eval.tasks import TaskManager
+from lm_eval.models.huggingface import HFLM
+from lm_eval import evaluator, utils, tasks
+from lm_eval.utils import handle_non_serializable, make_table, simple_parse_args_string
+
+from model.Llama_AlignedKV import LMEvalLlamaForCausalLM_AlignedKV
+
+# config
+# tasks in {coqa, truthfulqa_gen, gsm8k}
+task_list = ["coqa", "truthfulqa_gen", "gsm8k"] # "coqa", "truthfulqa_gen", "gsm8k"
+device = "cuda:0"
+model_path = "meta-llama/Llama-2-7b-hf"
+kvcache_type = "alignedKV" # "alignedkv", "static", "kivi"
+
+model = LMEvalLlamaForCausalLM_AlignedKV(
+                pretrained=model_path,
+                dtype=torch.half,
+                max_length=8192,
+                batch_size=8,
+                device=device,
+                attn_implementation="spda",
+                key_value_cache_class=kvcache_type,
+            )
+# model = HFLM(pretrained=model_path, max_length=2048, batch_size=12, device=device)
+
+# tasks.initialize_tasks()
+task_manager = TaskManager("INFO", include_path=None)
+# print(task_manager.list_all_tasks())
+task_names = task_manager.match_tasks(task_list)
+for task in [task for task in task_list if task not in task_names]:
+    if os.path.isfile(task):
+        config = utils.load_yaml_config(task)
+        task_names.append(config)
+task_missing = [
+    task for task in task_list if task not in task_names and "*" not in task
+]  # we don't want errors if a wildcard ("*") task name was used
+if task_missing:
+    missing = ", ".join(task_missing)
+    raise ValueError(
+        f"Tasks {missing} were not found. Try `lm-eval --tasks list` for list of available tasks."
+    )
+results = evaluator.simple_evaluate(
+    model=model,
+    # model_args='parallelize=True',
+    tasks=task_names,
+    log_samples=True
+    # no_cache=True,
+    # num_fewshot=data_args.num_fewshot,
+)
+
+print(make_table(results))
+if "groups" in results:
+    print(make_table(results, "groups"))
