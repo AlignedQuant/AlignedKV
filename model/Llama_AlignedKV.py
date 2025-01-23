@@ -31,6 +31,12 @@ class LlamaAttention_AlignedKV(LlamaAttention):
         cache_position: Optional[torch.LongTensor] = None,
         **kwargs: Unpack[FlashAttentionKwargs],
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
+        device = self.q_proj.weight.device
+        hidden_states = hidden_states.to(device)
+        attention_mask = attention_mask.to(device) if attention_mask is not None else None
+        cache_position = cache_position.to(device) if cache_position is not None else None
+        position_embeddings = (pos_emb.to(device) for pos_emb in position_embeddings)
+
         input_shape = hidden_states.shape[:-1]
         hidden_shape = (*input_shape, -1, self.head_dim)
 
@@ -147,9 +153,6 @@ class LlamaModel_AlignedKV(LlamaModel):
     Args:
         config: LlamaConfig
     """
-    _supports_flash_attn_2 = False
-    _supports_sdpa = False
-
     def __init__(self, config: LlamaConfig):
         super(LlamaModel, self).__init__(config)
         self.padding_idx = config.pad_token_id

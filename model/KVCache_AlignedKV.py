@@ -40,10 +40,14 @@ class QuantizedCache_AlignedKV(Cache):
         self.value_cache: List[VCache] = []
 
         for _ in range(config.num_hidden_layers):
+            if isinstance(device, dict):
+                layer_device = device[_]
+            else:
+                layer_device = device
             self.key_cache.append(KCache(max_batch_size, self.max_cache_len, self.num_key_value_heads, self.head_dim,
-                                         self.gqa, device, _))
+                                         self.gqa, layer_device, _))
             self.value_cache.append(VCache(max_batch_size, self.max_cache_len, self.num_key_value_heads, self.head_dim,
-                                           self.gqa, device, _))
+                                           self.gqa, layer_device, _))
         
         self.reference = reference
         self.use_tensorcore = use_tensorcore

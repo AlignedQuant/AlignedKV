@@ -90,11 +90,14 @@ struct VCache {
 // assert seqlen % 8 == 0
 // block (seqlen // 8, n_local_kv_heads, bsz)
 // thread (d_head // 8, 8, 1)
+// new block (seqlen // 32, n_local_kv_heads, bsz)
+// new thread (d_head // 8, 32, 1)
 // template <unsigned int data_transfer_mode>
 __global__ void v_cache_save_kernel(TensorNormal v_new, VCache v_cache, const unsigned int start_seq) {
     const unsigned int bsz_id = blockIdx.z;
     const unsigned int n_local_kv_heads_id = blockIdx.y;
-    const unsigned int seq_id = blockIdx.x * 8 + threadIdx.y;
+    // const unsigned int seq_id = blockIdx.x * 8 + threadIdx.y;
+    const unsigned int seq_id = blockIdx.x * 32 + threadIdx.y;
     const unsigned int d_head_id = threadIdx.x * 8;
     // 保存数据
     v_cache.save_8_uint16(bsz_id, n_local_kv_heads_id, seq_id, start_seq, d_head_id, v_new);
@@ -145,8 +148,10 @@ void v_cache_save(
     VCache v_cache(v_cache_first_8_data, v_cache_mid_4_data, v_cache_last_4_data);
 
     // Create grid and block parameters
-    dim3 grid(seqlen / 8, n_local_kv_heads, bsz);
-    dim3 block(d_head / 8, 8, 1);
+    // dim3 grid(seqlen / 8, n_local_kv_heads, bsz);
+    // dim3 block(d_head / 8, 8, 1);
+    dim3 grid(seqlen / 32, n_local_kv_heads, bsz);
+    dim3 block(d_head / 8, 32, 1);
     
     // Launch the kernel
     v_cache_save_kernel<<<grid, block>>>(v_new_tensor, v_cache, start_seq);

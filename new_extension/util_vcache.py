@@ -55,12 +55,14 @@ class VCache(object):
             self.start_pos += save_len
 
     def add_rest(self, newv):
+        newv = newv.to(self.device)
         if self.restv is None:
             self.restv = newv
         else:
             self.restv = torch.cat([self.restv, newv], dim=1)
 
     def prefill_o_list(self, o):
+        o = o.to(self.device)
         # o(bsz, seqlen, n_heads * head_dim)
         n_head = self.gqa * self.n_local_kv_heads
         seq_len = o.shape[1]
@@ -73,6 +75,7 @@ class VCache(object):
             self.o_list_evict = (self.o_list_evict + 1) % o_list_len
 
     def gemm_sv_main(self, s, reference = False, use_tensorcore = False):
+        s = s.to(self.device)
         if self.start_pos == 0:
             return None
         n_head = s.shape[1]

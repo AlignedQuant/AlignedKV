@@ -99,15 +99,22 @@ struct KCache {
 // assert seqlen % 2 == 0, expect seqlen % COLUMN_BLOCK == 0
 // 线程按x连续，x维度放最连续的维度
 // block (8, n_local_kv_heads, bsz)
-// thread (COLUMN_BLOCK / 8, d_head / 8, seqlen // COLUMN_BLOCK)
+// thread (COLUMN_BLOCK / 8, d_head / 8, seqlen / COLUMN_BLOCK)
+// new thread (COLUMN_BLOCK / 8, d_head / 8, 1)
 __global__ void k_cache_save_kernel(TensorNormal k_new, KCache k_cache, const unsigned int start_block) {
     const unsigned int bsz_id = blockIdx.z;
     const unsigned int n_local_kv_heads_id = blockIdx.y;
     const unsigned int d_head_id = threadIdx.y + blockIdx.x * blockDim.y;
-    const unsigned int seq_per_columnblock_id = threadIdx.z;
+    // const unsigned int seq_per_columnblock_id = threadIdx.z;
     const unsigned int seq_rest_columnblock_id = threadIdx.x * 8;
     // 保存数据
-    k_cache.save_8_uint16(bsz_id, n_local_kv_heads_id, seq_per_columnblock_id, start_block, d_head_id, seq_rest_columnblock_id, k_new);
+    // k_cache.save_8_uint16(bsz_id, n_local_kv_heads_id, seq_per_columnblock_id, start_block, d_head_id, seq_rest_columnblock_id, k_new);
+    const unsigned int seqlen = k_new.stride_2;
+    const unsigned int seqlen_div_COLUMN_BLOCK = seqlen / COLUMN_BLOCK;
+    # pragma unroll 4
+    for (unsigned int seq_per_columnblock_id = 0; seq_per_columnblock_id < seqlen_div_COLUMN_BLOCK; seq_per_columnblock_id++) {
+        k_cache.save_8_uint16(bsz_id, n_local_kv_heads_id, seq_per_columnblock_id, start_block, d_head_id, seq_rest_columnblock_id, k_new);
+    }
 }
 
 void k_cache_save(
@@ -159,7 +166,8 @@ void k_cache_save(
     const unsigned int threads_per_block_z = seqlen / COLUMN_BLOCK; // Assuming seqlen is divisible by COLUMN_BLOCK
 
     dim3 grid(8, n_local_kv_heads, bsz); // Grid dimensions
-    dim3 block(threads_per_block_x, threads_per_block_y, threads_per_block_z); // Block dimensions
+    // dim3 block(threads_per_block_x, threads_per_block_y, threads_per_block_z); // Block dimensions
+    dim3 block(threads_per_block_x, threads_per_block_y, 1); // Block dimensions
 
     // Launch the kernel
     k_cache_save_kernel<<<grid, block>>>(k_new_tensor, k_cache, start_block);

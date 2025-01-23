@@ -48,12 +48,14 @@ class KCache(object):
             self.k_cache_exp_column_max = torch.maximum(self.k_cache_exp_column_max, to_save_column_max)
 
     def add_rest(self, newk):
+        newk = newk.to(self.device)
         if self.restk is None:
             self.restk = newk
         else:
             self.restk = torch.cat([self.restk, newk], dim=1)
 
     def gemm_qkt_main(self, q, reference = False, use_tensorcore = False):
+        q = q.to(self.device)
         if self.start_block == 0:
             return None
         n_head = q.shape[2]
