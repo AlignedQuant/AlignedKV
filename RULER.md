@@ -1,6 +1,6 @@
 Due to the size of the entire RULER evaluation set, we selected a few distinguishable subsets for evaluation, which consist of the following datasets: `niah_single_1`, `niah_single_2`, `niah_single_3`, `niah_multikey_1`, `niah_multikey_2`, `niah_multikey_3`, `niah_multivalue`, `niah_multiquery`, `vt`, `cwe`, `fwe`, `qa_1`, and `qa_2`.
 
-### `sequence length` = 64k
+### `sequence length` = 64k Llama-3.1-8B-Instruct
 
 | Method            | niah_multikey_2 | vt   | fwe  | qa_1 | qa_2 |
 | ----------------- | --------------- | ---- | ---- | ---- | ---- |
@@ -9,11 +9,29 @@ Due to the size of the entire RULER evaluation set, we selected a few distinguis
 | kivi-8bit         |                 |      |      |      |      |
 | StreammingLLM-16k |                 |      |      |      |      |
 
-### `sequence length` = 128k
+### `sequence length` = 128k Llama-3.1-8B-Instruct
 
 | Method            | niah_multikey_2 | vt   | fwe  | qa_1 | qa_2 |
 | ----------------- | --------------- | ---- | ---- | ---- | ---- |
-| baseline          |                 |      |      |      |      |
+| baseline          |       74.6          |    54.56  |    75.0  |   71.6   |   41.8   |
+| AlignedKV         |                 |      |      |      |      |
+| kivi-8bit         |                 |      |      |      |      |
+| StreammingLLM-16k |                 |      |      |      |      |
+
+### `sequence length` = 64k Llama-3.2-3B-Instruct
+
+| Method            | niah_multikey_2 | vt   | fwe  | qa_1 | qa_2 |
+| ----------------- | --------------- | ---- | ---- | ---- | ---- |
+| baseline          |         70.2        |   62.56   |   81.87   |  45.0    |  41.2    |
+| AlignedKV         |                 |      |      |      |      |
+| kivi-8bit         |                 |      |      |      |      |
+| StreammingLLM-16k |                 |      |      |      |      |
+
+### `sequence length` = 128k Llama-3.2-3B-Instruct
+
+| Method            | niah_multikey_2 | vt   | fwe  | qa_1 | qa_2 |
+| ----------------- | --------------- | ---- | ---- | ---- | ---- |
+| baseline          |         57.0        |   41.64   |   62.6   |   39.6   |   35.2   |
 | AlignedKV         |                 |      |      |      |      |
 | kivi-8bit         |                 |      |      |      |      |
 | StreammingLLM-16k |                 |      |      |      |      |
