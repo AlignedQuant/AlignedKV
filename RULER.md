@@ -23,8 +23,8 @@ Due to the size of the entire RULER evaluation set, we selected a few distinguis
 | Method            | niah_multikey_2 | vt   | fwe  | qa_1 | qa_2 |
 | ----------------- | --------------- | ---- | ---- | ---- | ---- |
 | baseline          |         70.2        |   62.56   |   81.87   |  45.0    |  41.2    |
-| AlignedKV         |         70.2 | 63.2 | 83.53 | 44.6 | 41.0        |
-| kivi-8bit         |         70.0 | 62.28 | 82.07 | 44.4 | 41.2 |
+| AlignedKV         |         **70.2** | **63.2** | **83.53** | **44.6** | 41.0        |
+| kivi-8bit         |         70.0 | 62.28 | 82.07 | 44.4 | **41.2** |
 | StreammingLLM-16k |         21.6 | 18.04 | 53.73 | 27.2 | 24.2 |
 
 ### `sequence length` = 128k Llama-3.2-3B-Instruct
