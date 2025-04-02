@@ -4,7 +4,7 @@ Due to the size of the entire RULER evaluation set, we selected a few distinguis
 
 | Method            | niah_multikey_2 | vt   | fwe  | qa_1 | qa_2 |
 | ----------------- | --------------- | ---- | ---- | ---- | ---- |
-| baseline          |       74.6          |    54.56  |    75.0  |   71.6   |   41.8   |
+| baseline          |                 |      |      |      |      |
 | AlignedKV         |                 |      |      |      |      |
 | kivi-8bit         |                 |      |      |      |      |
 | StreammingLLM-16k |                 |      |      |      |      |
@@ -13,7 +13,7 @@ Due to the size of the entire RULER evaluation set, we selected a few distinguis
 
 | Method            | niah_multikey_2 | vt   | fwe  | qa_1 | qa_2 |
 | ----------------- | --------------- | ---- | ---- | ---- | ---- |
-| baseline          |                 |      |      |      |      |
+| baseline          |   74.6          |    54.56  |    75.0  |   71.6   |   41.8   |
 | AlignedKV         |                 |      |      |      |      |
 | kivi-8bit         |                 |      |      |      |      |
 | StreammingLLM-16k |                 |      |      |      |      |
@@ -23,7 +23,7 @@ Due to the size of the entire RULER evaluation set, we selected a few distinguis
 | Method            | niah_multikey_2 | vt   | fwe  | qa_1 | qa_2 |
 | ----------------- | --------------- | ---- | ---- | ---- | ---- |
 | baseline          |         70.2        |   62.56   |   81.87   |  45.0    |  41.2    |
-| AlignedKV         |                 |      |      |      |      |
+| AlignedKV         |         70.2 | 63.2 | 83.53 | 44.6 | 41.0        |
 | kivi-8bit         |                 |      |      |      |      |
 | StreammingLLM-16k |                 |      |      |      |      |
 
@@ -32,6 +32,6 @@ Due to the size of the entire RULER evaluation set, we selected a few distinguis
 | Method            | niah_multikey_2 | vt   | fwe  | qa_1 | qa_2 |
 | ----------------- | --------------- | ---- | ---- | ---- | ---- |
 | baseline          |         57.0        |   41.64   |   62.6   |   39.6   |   35.2   |
-| AlignedKV         |                 |      |      |      |      |
+| AlignedKV         |56.8 | 42.4 | 61.93 | 41.0 | 35.6 |
 | kivi-8bit         |                 |      |      |      |      |
 | StreammingLLM-16k |                 |      |      |      |      |
