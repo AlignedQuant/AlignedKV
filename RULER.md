@@ -32,6 +32,6 @@ Due to the size of the entire RULER evaluation set, we selected a few distinguis
 | Method            | niah_multikey_2 | vt   | fwe  | qa_1 | qa_2 |
 | ----------------- | --------------- | ---- | ---- | ---- | ---- |
 | baseline          |         57.0        |   41.64   |   62.6   |   39.6   |   35.2   |
-| AlignedKV         |56.8 | 42.4 | 61.93 | 41.0 | 35.6 |
-| kivi-8bit         |                 |      |      |      |      |
-| StreammingLLM-16k |                 |      |      |      |      |
+| AlignedKV         | 56.8 | **42.4** | 61.93 | **41.0** | **35.6** |
+| kivi-8bit         | **58.2** | 41.28 | **62.53** | 40.2 | 35.4 |
+| StreammingLLM-16k | 10.2 | 7.48 | 28.2 | 22.6 | 23.4 |
