@@ -5,18 +5,18 @@ Due to the size of the entire RULER evaluation set, we selected a few distinguis
 | Method            | niah_multikey_2 | vt   | fwe  | qa_1 | qa_2 |
 | ----------------- | --------------- | ---- | ---- | ---- | ---- |
 | baseline          |   97.2   |  93.0  |   84.13 | 76.4 | 49.2   |
-| AlignedKV         |                 |      |      |      |      |
-| kivi-8bit         |                 |      |      |      |      |
-| StreammingLLM-16k |                 |      |      |      |      |
+| AlignedKV         | 97.2 | 91.08 | 85.6 | **76.6** | **48.4** |
+| kivi-8bit         | 97.2 | **92.8** | 84.6 | 76.4 | 48.2 |
+| StreammingLLM-16k |  28.8 | 13.84 | **88.47** | 48.0 | 36.0 |
 
 ### `sequence length` = 128k Llama-3.1-8B-Instruct
 
 | Method            | niah_multikey_2 | vt   | fwe  | qa_1 | qa_2 |
 | ----------------- | --------------- | ---- | ---- | ---- | ---- |
 | baseline          |   74.6          |    54.56  |    75.0  |   71.6   |   41.8   |
-| AlignedKV         |                 |      |      |      |      |
-| kivi-8bit         |                 |      |      |      |      |
-| StreammingLLM-16k |                 |      |      |      |      |
+| AlignedKV         |  74.6 | **54.6** | **76.13** | 71.6 | 41.6  |
+| kivi-8bit         |  **75.0** | 54.52 | 75.8 | **71.8** | **41.8** |
+| StreammingLLM-16k | 10.6 | 9.92 | 59.53 | 43.6 | 30.6 |
 
 ### `sequence length` = 64k Llama-3.2-3B-Instruct
 
